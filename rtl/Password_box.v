@@ -16,7 +16,7 @@ output reg [2:0]tricolor_light2//三色灯2 从高位到地位为RGB
  parameter RIGHT    = 4'b0010;
  parameter WRONG    = 4'b0100;
  parameter LOCK     = 4'b1000;
- 
+
 //三色灯
  parameter RED    = 3'b011;
  parameter GREEN  = 3'b101;
@@ -31,7 +31,7 @@ output reg [2:0]tricolor_light2//三色灯2 从高位到地位为RGB
  parameter PASSWORD = 4'b0100;
  
 //错误计数器
- reg number_of_wrong;
+ reg [3:0]number_of_wrong;
  
 //倒计时结束标志位
  wire countdown_finish;
@@ -42,6 +42,9 @@ output reg [2:0]tricolor_light2//三色灯2 从高位到地位为RGB
 //显存
  wire [3:0] seg1_value;
  wire [3:0] seg2_value;
+ 
+//记录确认按键变化
+ reg confirm_previous; 
  
 //数码管显示
  reg [8:0] seg [9:0]; // 声明reg型数组变量  
@@ -100,7 +103,7 @@ end
  seg2 <= 9'b0_0000_0000;
  tricolor_light1 <= YELLOW;
  tricolor_light2 <= YELLOW;
- number_of_wrong <= 1'b0;
+ number_of_wrong <= 4'b0000;
  flag <= 1'b0;
  end
  
@@ -111,10 +114,18 @@ end
  tricolor_light2 <= YELLOW;
  led <= 8'b1111_1111;
  flag <= 1'b0;
- if(cin != PASSWORD && !confirm )
- number_of_wrong <= number_of_wrong+1'b1;
- else
- number_of_wrong <= number_of_wrong;
+ number_of_wrong <= 4'b0000;
+ 
+ if (confirm == 1'b1) begin  
+     confirm_previous <= 1'b1;  
+ end else begin  
+     if (confirm_previous == 1'b1 && confirm == 1'b0 && cin != PASSWORD) begin  
+         number_of_wrong <= number_of_wrong + 1;  
+			confirm_previous = 1'b0;
+     end else begin  
+         number_of_wrong <= number_of_wrong;
+         end  
+     end   
  end
  
  RIGHT : 
@@ -122,22 +133,32 @@ end
  tricolor_light1 <= GREEN;
  tricolor_light2 <= GREEN;
  led <= 8'b1111_1111;
- number_of_wrong <= 1'b0;
+ number_of_wrong <= 4'b0000;
  seg1 <= 9'b0_0011_1111;//显示o
  seg2 <= 9'b0_0011_0111;//显示n
  flag <= 1'b0;
- if(cin != PASSWORD && !confirm )
- number_of_wrong <= number_of_wrong+1'b1;
- else
- number_of_wrong <= number_of_wrong;
+ 
+ if (confirm == 1'b1) begin  
+     confirm_previous <= 1'b1;  
+ end else begin  
+     if (confirm_previous == 1'b1 && confirm == 1'b0 && cin != PASSWORD) begin  
+         number_of_wrong <= number_of_wrong + 1;  
+			confirm_previous = 1'b0;
+     end else begin  
+         number_of_wrong <= number_of_wrong;
+         end  
+     end   
  end
  
  WRONG : 
  begin
  tricolor_light1 <= RED;
  tricolor_light2 <= RED;
- seg1 <= 9'b0_1000_0000;//显示-
- seg2 <= 9'b0_1000_0000;//显示-
+//测试代码
+ //seg1 <= seg[number_of_wrong];
+ //seg2 <= seg[number_of_wrong];
+ seg1 <= 9'b0_0100_0000;//显示-
+ seg2 <= 9'b0_0100_0000;//显示-
  flag <= 1'b0;
  case(number_of_wrong)
  4'd0:led<=8'b0000_0000;
@@ -150,20 +171,28 @@ end
  4'd7:led<=8'b0111_1111;
  4'd8:led<=8'b1111_1111;
  endcase
- if(cin != PASSWORD && !confirm )
- number_of_wrong <= number_of_wrong+1'b1;
- else
- number_of_wrong <= number_of_wrong;
+ 
+ if (confirm == 1'b1) begin  
+     confirm_previous <= 1'b1;  
+ end else begin  
+     if (confirm_previous == 1'b1 && confirm == 1'b0 && cin != PASSWORD) begin  
+         number_of_wrong <= number_of_wrong + 1;  
+			confirm_previous = 1'b0;
+     end else begin  
+         number_of_wrong <= number_of_wrong;
+         end  
+     end   
  end
+ 
  
  LOCK  : 
  begin
  tricolor_light1 <= BLUE;
  tricolor_light2 <= BLUE;
- number_of_wrong <= 0;
+ number_of_wrong <= 4'b0000;
  flag <= 1'b1;
- seg1 <= seg[seg1_value];
- seg2 <= seg[seg2_value];
+ seg1 <= seg[seg2_value];
+ seg2 <= seg[seg1_value];
  end
  endcase
  
