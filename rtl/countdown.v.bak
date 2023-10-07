@@ -1,0 +1,8 @@
+ countdown my_countdown
+ (
+ .clk (sys_clk),
+
+ .countdown_times (countdown_time),
+ .seg1_output (seg1),
+ .seg2_output (seg2)
+ );
